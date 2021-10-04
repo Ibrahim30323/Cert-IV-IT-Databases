@@ -1,0 +1,14 @@
+Relation Schema:
+
+PROJECT (ProjCode, ProjectTitle)
+Primary Key (ProjCode)
+
+WORKER (WID, WName, Gender)
+Primary Key (WID)
+
+Foreign Key (ProjCode) REFERENCES PROJECT
+
+
+
+
+

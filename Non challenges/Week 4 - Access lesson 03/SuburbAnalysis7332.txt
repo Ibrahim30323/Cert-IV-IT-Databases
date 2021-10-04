@@ -1,0 +1,109 @@
+"Suburb","Description","Total Customers"
+"Ascot Vale","High Value",9
+"Ascot Vale","Low Value",9
+"Ascot Vale","Neutral",9
+"Brooklyn","High Value",7
+"Brooklyn","Low Value",7
+"Brooklyn","Neutral",7
+"Brunswick","High Value",13
+"Brunswick","Low Value",13
+"Brunswick","Neutral",13
+"Bundoora","High Value",4
+"Bundoora","Low Value",4
+"Bundoora","Neutral",4
+"Carlton","High Value",8
+"Carlton","Low Value",8
+"Carlton","Neutral",8
+"Chadstone","High Value",6
+"Chadstone","Low Value",6
+"Chadstone","Neutral",6
+"Coburg North","High Value",6
+"Coburg North","Low Value",6
+"Coburg North","Neutral",6
+"Craigieburn","High Value",4
+"Craigieburn","Low Value",4
+"Craigieburn","Neutral",4
+"Cranbourne","High Value",10
+"Cranbourne","Low Value",10
+"Cranbourne","Neutral",10
+"Epping","High Value",11
+"Epping","Low Value",11
+"Epping","Neutral",11
+"Essendon","High Value",8
+"Essendon","Low Value",8
+"Essendon","Neutral",8
+"Fitzroy","High Value",22
+"Fitzroy","Low Value",22
+"Fitzroy","Neutral",22
+"Footscray","High Value",3
+"Footscray","Low Value",3
+"Footscray","Neutral",3
+"Glenroy","High Value",10
+"Glenroy","Low Value",10
+"Glenroy","Neutral",10
+"Hawthorn","High Value",29
+"Hawthorn","Low Value",29
+"Hawthorn","Neutral",29
+"Hillside","High Value",5
+"Hillside","Low Value",5
+"Hillside","Neutral",5
+"Hoppers Crossing","High Value",10
+"Hoppers Crossing","Low Value",10
+"Hoppers Crossing","Neutral",10
+"Hurstbridge","High Value",5
+"Hurstbridge","Low Value",5
+"Hurstbridge","Neutral",5
+"Keilor Downs","High Value",15
+"Keilor Downs","Low Value",15
+"Keilor Downs","Neutral",15
+"Kensington","High Value",19
+"Kensington","Low Value",19
+"Kensington","Neutral",19
+"Lalor","High Value",8
+"Lalor","Low Value",8
+"Lalor","Neutral",8
+"Mentone","High Value",4
+"Mentone","Low Value",4
+"Mentone","Neutral",4
+"Mill Park","High Value",10
+"Mill Park","Low Value",10
+"Mill Park","Neutral",10
+"Moonee Ponds","High Value",13
+"Moonee Ponds","Low Value",13
+"Moonee Ponds","Neutral",13
+"North Melbourne","High Value",6
+"North Melbourne","Low Value",6
+"North Melbourne","Neutral",6
+"Northcote","High Value",12
+"Northcote","Low Value",12
+"Northcote","Neutral",12
+"Point Cook","High Value",9
+"Point Cook","Low Value",9
+"Point Cook","Neutral",9
+"Preston","High Value",4
+"Preston","Low Value",4
+"Preston","Neutral",4
+"Reservoir","High Value",13
+"Reservoir","Low Value",13
+"Reservoir","Neutral",13
+"Richmond","High Value",11
+"Richmond","Low Value",11
+"Richmond","Neutral",11
+"Scoresby","High Value",19
+"Scoresby","Low Value",19
+"Scoresby","Neutral",19
+"Sunshine North","High Value",2
+"Sunshine North","Low Value",2
+"Sunshine North","Neutral",2
+"Sunshine West","High Value",9
+"Sunshine West","Low Value",9
+"Sunshine West","Neutral",9
+"Thomastown","High Value",10
+"Thomastown","Low Value",10
+"Thomastown","Neutral",10
+"Wattle Park","High Value",6
+"Wattle Park","Low Value",6
+"Wattle Park","Neutral",6
+"Yarraville","High Value",9
+"Yarraville","Low Value",9
+"Yarraville","Neutral",9
