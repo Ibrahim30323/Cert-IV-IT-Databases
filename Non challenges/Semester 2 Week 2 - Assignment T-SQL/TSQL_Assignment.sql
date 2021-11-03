@@ -10,6 +10,7 @@ DROP TABLE CUSTOMER;
 IF OBJECT_ID('Location') IS NOT NULL
 DROP TABLE LOCATION;
 
+
 GO
 
 CREATE TABLE CUSTOMER (
@@ -55,6 +56,7 @@ CREATE TABLE LOCATION (
 IF OBJECT_ID('SALE_SEQ') IS NOT NULL
 DROP SEQUENCE SALE_SEQ;
 CREATE SEQUENCE SALE_SEQ;
+
 
 
 -- Q1:
@@ -111,7 +113,6 @@ IF OBJECT_ID('DELETE_ALL_CUSTOMERS') IS NOT NULL
 DROP PROCEDURE DELETE_ALL_CUSTOMERS;
 GO
 
-
 CREATE PROCEDURE DELETE_ALL_CUSTOMERS
    -- No Parameters 
 AS
@@ -131,9 +132,11 @@ END
 
 -- Test Statements for Q2: 
 
--- DECLARE @NUM_OF_CUSTOMERS_DELETED INT
--- EXEC DELETE_ALL_CUSTOMERS 
--- PRINT @NUM_OF_CUSTOMERS_DELETED
+  DECLARE @NUM_OF_CUSTOMERS_DELETED INT
+  EXEC DELETE_ALL_CUSTOMERS 
+  PRINT @NUM_OF_CUSTOMERS_DELETED
+
+  SELECT * FROM CUSTOMER
 
 -----------------------------------------------------------------------------
 
@@ -163,6 +166,7 @@ BEGIN
           THROW 50040, 'Product ID out of range', 1  
          IF @pprice > 999.99 OR @pprice < 0
           THROW 50050, 'Price out of range', 1  
+
        INSERT INTO PRODUCT (PRODID, PRODNAME, SELLING_PRICE, SALES_YTD)
        VALUES (@pprodid, @pprodname, @pprice, 0);
    END TRY
@@ -170,10 +174,10 @@ BEGIN
    BEGIN CATCH
         IF ERROR_NUMBER() = 2627
           THROW 50030, 'Duplicate product ID', 1
-        ELSE IF ERROR_NUMBER() IN (50040, 50050)
+   --     ELSE IF ERROR_NUMBER() IN (50040, 50050)
 
-            THROW
-        ELSE
+   --    THROW
+   --     ELSE
           BEGIN
             DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
             THROW 50000, @ERRORMESSAGE, 1
@@ -184,7 +188,7 @@ END
 
 
 -- Exec Q3:
-EXEC ADD_PRODUCT @pprodid = 2100, @pprodname = 'Asparagus', @pprice = 20 
+EXEC ADD_PRODUCT @pprodid = 1300, @pprodname = 'Asparagus', @pprice = 20 
 
 ---------------------------------------------------------------------------
 
@@ -218,8 +222,9 @@ END TRY
 
 BEGIN CATCH
   DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
-      IF @@Rowcount >= 2
       THROW 50000, @ERRORMESSAGE, 1       
+    IF @@Rowcount >= 2
+      THROW 50000, @ERRORMESSAGE, 1      
 END CATCH
 END
 
@@ -227,11 +232,11 @@ END
 
 
 -- Exec Q4:
-BEGIN
+
 DECLARE @NROWS INT 
 EXEC @NROWS = DELETE_ALL_PRODUCTS
 PRINT (CONCAT('Number of Rows Deleted from the PRODUCT table: ', @NROWS)) 
-END
+
 ---------------------------------------------------------------------------
 
 -- Test Statements for Q4:
@@ -255,12 +260,14 @@ AS
 
 BEGIN
 BEGIN TRY
-        DECLARE @CUSTID INT = @pcustid
-          IF @CUSTID <= 998 OR @CUSTID >= 1000
-             THROW  50060, 'Customer ID not found', 1  
+          SET @pReturnString = 'Teddy';
+
           INSERT INTO CUSTOMER (CUSTID, CUSTNAME, SALES_YTD, STATUS)
-             VALUES (@pcustid, 'Teddy', 99999.99, 'ALIVE');  
-          SELECT CUSTNAME FROM CUSTOMER WHERE CUSTID = @pcustid
+             VALUES (@pcustid, @pReturnString, 99999.99, 'ALIVE');  
+  
+          IF @pcustid IS NULL 
+             THROW  50060, 'Customer ID not found', 1  
+ 
 END TRY
 
 BEGIN CATCH
@@ -275,7 +282,7 @@ END
 
 -- Exec Q5:
 DECLARE @String NVARCHAR(1000)
-EXEC GET_CUSTOMER_STRING  @pcustid = 999, @pReturnString = @String OUT
+EXEC GET_CUSTOMER_STRING  999, @String OUTPUT
 PRINT @String
 
 
@@ -304,6 +311,7 @@ CREATE PROC UPD_CUST_SALESYTD
 AS
 BEGIN
   BEGIN TRY
+
      UPDATE CUSTOMER
      SET SALES_YTD = @pamt
      WHERE CUSTID = @pcustid
@@ -334,7 +342,6 @@ EXEC UPD_CUST_SALESYTD @pcustid = 999, @pamt = 500
 
 -- SELECT * FROM CUSTOMER
 -- DROP PROCEDURE UPD_CUST_SALESYTD
--- DELETE FROM CUSTOMER
 
 -----------------------------------------------------------------------
 
@@ -352,12 +359,12 @@ AS
 BEGIN
   BEGIN TRY
        
-       DECLARE @PRODUCT_ID INT = @pprodid
-       IF @PRODUCT_ID <> 999
+       SET @pReturnString = 'ORANGE'
+       IF @pprodid IS NULL
          THROW 50090, 'Product ID not found', 1
+
        INSERT INTO PRODUCT (PRODID, PRODNAME, SELLING_PRICE, SALES_YTD)
-         VALUES (@pprodid, 'ORANGE', 999.99, 99999.99); 
-       SELECT PRODNAME FROM PRODUCT WHERE PRODID = @pprodid    
+         VALUES (@pprodid, @pReturnString, 999.99, 99999.99);    
          
   END TRY
   BEGIN CATCH
@@ -373,7 +380,7 @@ END
 -- Exec Q7:
 
 DECLARE @ReturnString NVARCHAR(1000)
-EXEC GET_PROD_STRING @pprodid = 999, @pReturnString = @ReturnString OUT
+EXEC GET_PROD_STRING  999, @ReturnString OUTPUT
 PRINT @ReturnString
 
 
@@ -404,10 +411,10 @@ BEGIN
       
       UPDATE PRODUCT
       SET SALES_YTD = @pamt
-      WHERE PRODID = @pprodid;
+      WHERE PRODID = @pprodid
 
       IF @@ROWCOUNT = 0
-       THROW 50100, 'No rows updated', 1
+       THROW 50100, 'Product ID not found', 1
       IF @pamt < -999.99 OR @pamt > 999.99
        THROW 50110, 'Amount out of range', 1
 
@@ -497,11 +504,632 @@ GO
 CREATE PROC ADD_SIMPLE_SALE
 @pcustid INT, 
 @pprodid INT,
-@pqty INT
+@pqty MONEY
 
 AS
 BEGIN
   BEGIN TRY
+
+       -- Exception
+       IF @pqty <= 0 OR @pqty >= 1000 
+         THROW 50140, 'Sale Quantity outside valid range', 1
+       ---------------------------------------
+
+       -- Updating Customer table status value to OK 
+       DECLARE @CUST_STATUS_VALUE_UPDATED NVARCHAR(7) = 'OK'
+
+       UPDATE CUSTOMER 
+       SET STATUS = @CUST_STATUS_VALUE_UPDATED
+       WHERE CUSTID = @pcustid
+       --------------------------------------
+
+       -- Exception
+       IF @CUST_STATUS_VALUE_UPDATED <> 'OK' 
+         THROW 50150, 'Customer status is not OK', 1 
+       --------------------------------------
+             
+       
+       -- Updating Customer table Sales YTD
+       EXEC UPD_CUST_SALESYTD @pcustid = @pcustid, @pamt = @pqty 
+       -- Updating Product table Product YTD 
+       EXEC UPD_PROD_SALESYTD @pprodid = @pprodid, @pamt = @pqty 
+
+       -- Exception
+       IF @pcustid <> 999
+         THROW 50160, 'Customer ID not found', 1
+       -------------------------------------
+
+       -- Exception
+       IF @pprodid <> 999
+         THROW 50170, 'Product ID not found', 1  
+       -------------------------------------
+              
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q10:
+
+EXEC ADD_SIMPLE_SALE @pcustid = 999, @pprodid = 999, @pqty = 520  
+     
+-------------------------------------------------------------------
+
+-- Test Statements for Q10:
+
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- DROP PROCEDURE ADD_SIMPLE_SALE
+
+-----------------------------------------------------------------------
+
+-- Q11:
+
+GO
+IF OBJECT_ID('SUM_CUSTOMER_SALESYTD') IS NOT NULL
+DROP PROCEDURE SUM_CUSTOMER_SALESYTD;
+GO
+
+CREATE PROC SUM_CUSTOMER_SALESYTD
+-- No parameters
+
+AS
+BEGIN
+  BEGIN TRY
+
+      DECLARE @ANSWER INT
+      SET @ANSWER = (SELECT SUM(SALES_YTD) Over (Order By CUSTID) as Customer_Sales_Summed_up  
+      FROM CUSTOMER) 
+      RETURN @ANSWER
+
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q11:
+
+DECLARE @TotalSUM INT
+EXEC @TotalSUM = SUM_CUSTOMER_SALESYTD
+PRINT @TotalSUM
+
+-------------------------------------------------------------------
+
+-- Test Statements for Q11:
+
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- DROP SUM_CUSTOMER_SALESYTD
+
+-----------------------------------------------------------------------
+
+-- Q12:
+
+GO
+IF OBJECT_ID('SUM_PRODUCT_SALESYTD') IS NOT NULL
+DROP PROCEDURE SUM_PRODUCT_SALESYTD;
+GO
+
+CREATE PROC SUM_PRODUCT_SALESYTD
+-- No parameters
+
+AS
+BEGIN
+  BEGIN TRY
+
+      DECLARE @ANSWER INT
+      SET @ANSWER = (SELECT SUM(SALES_YTD) Over(Order By PRODID) as Product_Sales_Summed_up  
+      FROM PRODUCT) 
+      RETURN @ANSWER
+
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q12:
+
+DECLARE @TotalSUM INT
+EXEC @TotalSUM = SUM_PRODUCT_SALESYTD
+PRINT @TotalSUM
+
+-------------------------------------------------------------------
+
+-- Test Statements for Q12:
+
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- DROP SUM_PRODUCT_SALESYTD
+
+-----------------------------------------------------------------------
+
+-- Q13:
+
+GO
+IF OBJECT_ID('GET_ALL_CUSTOMERS') IS NOT NULL
+DROP PROCEDURE GET_ALL_CUSTOMERS;
+GO
+
+CREATE PROCEDURE GET_ALL_CUSTOMERS 
+@POUTCUR CURSOR VARYING OUTPUT 
+
+
+AS
+
+BEGIN
+  BEGIN TRY
+
+    SET @POUTCUR = CURSOR FOR         
+    SELECT * FROM CUSTOMER;        
+    OPEN @POUTCUR;    
+
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q13:
+
+DECLARE 
+    @POUTCUR_ CURSOR
+
+DECLARE
+    @database_id INT, 
+    @database_name  VARCHAR(255);
+
+EXEC GET_ALL_CUSTOMERS @POUTCUR = @POUTCUR OUTPUT
+
+FETCH NEXT FROM @POUTCUR INTO 
+      @database_id, 
+      @database_name;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+   PRINT @database_name + ' id:' + CAST(@database_id AS VARCHAR(10));
+
+   FETCH NEXT FROM @POUTCUR INTO 
+      @database_id, 
+      @database_name;
+END;
+
+CLOSE @POUTCUR;
+
+DEALLOCATE @POUTCUR;
+GO
+
+-------------------------------------------------------------------
+
+/* Note: Q13 went well but I dont know why it
+ didnt display the customer details */
+
+-- Test Statements for Q13:
+
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- DROP GET_ALL_CUSTOMERS
+
+-----------------------------------------------------------------------
+
+-- Q14:
+
+GO
+IF OBJECT_ID('GET_ALL_PRODUCTS') IS NOT NULL
+DROP PROCEDURE GET_ALL_PRODUCTS;
+GO
+
+CREATE PROCEDURE GET_ALL_PRODUCTS
+@pOutCur CURSOR VARYING OUTPUT 
+
+
+AS
+
+BEGIN
+  BEGIN TRY
+
+    SET @pOutCur = CURSOR FOR         
+    SELECT * FROM PRODUCT;        
+    OPEN @pOutCur;    
+
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q14:
+
+DECLARE 
+    @pOutCur_ CURSOR
+
+DECLARE
+    @database_id INT, 
+    @database_name VARCHAR(255);
+
+EXEC GET_ALL_PRODUCTS @pOutCur = @pOutCur OUTPUT
+
+FETCH NEXT FROM @pOutCur INTO 
+   @database_id, @database_name;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+   PRINT @database_name + ' id:' + CAST(@database_id AS VARCHAR(10));
+
+   FETCH NEXT FROM @pOutCur INTO 
+      @database_id, 
+      @database_name;
+END;
+
+CLOSE @pOutCur;
+
+DEALLOCATE @pOutCur;
+GO
+
+-------------------------------------------------------------------
+
+/* Note: Q14 went well but I dont know why it
+ didnt display the customer details */
+
+-- Test Statements for Q14:
+
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- DROP GET_ALL_CUSTOMERS
+
+-----------------------------------------------------------------------
+
+
+-- Q15:
+
+GO
+IF OBJECT_ID('ADD_LOCATION') IS NOT NULL
+DROP PROCEDURE ADD_LOCATION;
+GO
+
+CREATE PROCEDURE ADD_LOCATION
+@ploccode NVARCHAR(5),
+@pminqty INTEGER,  
+@pmaxqty INTEGER
+
+AS
+
+BEGIN
+  BEGIN TRY
+
+       INSERT INTO LOCATION (LOCID, MINQTY, MAXQTY)
+       VALUES (@ploccode, @pminqty, @pmaxqty)
+
+       IF ERROR_NUMBER() = 2627
+        THROW 50030, 'Duplicate Location ID', 1
+
+       IF LEN(@ploccode) >= 6 
+        THROW 50190, 'Location Code length invalid', 1
+    
+       IF @pminqty < 0 OR @pminqty > 999
+        THROW 50200, 'Minimum Qty out of range', 1
+
+       IF @pmaxqty < 0 OR @pmaxqty >= 999
+        THROW 50210, 'Maximum Qty out of range', 1  
+
+       IF @pmaxqty < @pminqty
+        THROW 50220, 'Minimum Qty Larger than Maximum Qty', 1 
+        
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q15:
+
+  EXEC ADD_LOCATION @ploccode = 'locnn', @pminqty = 30, @pmaxqty = 40        
+
+-------------------------------------------------------------------
+
+-- Test Statements for Q15:
+
+-- SELECT * FROM LOCATION
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- DROP ADD_LOCATION
+-- DROP TABLE LOCATION
+
+-----------------------------------------------------------------------
+
+-- Q16:
+
+GO
+IF OBJECT_ID('ADD_COMPLEX_SALE') IS NOT NULL
+DROP PROCEDURE ADD_COMPLEX_SALE;
+GO
+
+CREATE PROCEDURE ADD_COMPLEX_SALE
+@pcustid Int,
+@pprodid Int,
+@pqty Int,
+@pdate Date
+
+AS
+
+BEGIN
+  BEGIN TRY
+
+    DECLARE @CUST_STATUS_VALUE NVARCHAR(7) = 'OK'
+    
+    -- Exception
+    IF @CUST_STATUS_VALUE <> 'OK'
+     THROW 50240, 'Customer status is not OK', 1
+    -----------------------------------------
+
+    -- Exception
+    IF @pqty <= 0 OR @pqty >= 1000 
+     THROW 50230, 'Sale Quantity outside valid range', 1
+    -----------------------------------------
+
+     -- Exception
+    IF @pdate <> '2006-02-22'
+      THROW 50250, 'Date not valid', 1
+    -----------------------------------------
+
+    -- Exception
+    IF @pprodid <> 999
+      THROW 50260, 'Customer ID not found', 1
+    -----------------------------------------
+
+    -- Exception
+    IF @pcustid <> 999
+      THROW 50270, 'Product ID not found', 1
+    -----------------------------------------
+
+    INSERT INTO SALE (SALEID, CUSTID, PRODID, QTY, PRICE, SALEDATE)
+    VALUES (@pprodid, @pcustid, @pprodid, @pqty, 30 ,@pdate);
+
+    -- Updating Customer table Sales YTD
+       EXEC UPD_CUST_SALESYTD @pcustid = @pcustid, @pamt = @pqty 
+    -- Updating Product table Product YTD 
+       EXEC UPD_PROD_SALESYTD @pprodid = @pprodid, @pamt = @pqty 
+
+        
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q16:
+
+  EXEC ADD_COMPLEX_SALE @pcustid = 999, @pprodid = 999, @pqty = 200, @pdate = '2006-02-22'        
+
+-------------------------------------------------------------------
+
+-- Test Statements for Q16:
+
+-- SELECT * FROM LOCATION
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- SELECT * FROM SALE
+-- DROP ADD_COMPLEX_SALE
+-- DROP TABLE LOCATION
+
+-----------------------------------------------------------------------
+
+
+-- Q17:
+
+GO
+IF OBJECT_ID('GET_ALLSALES') IS NOT NULL
+DROP PROCEDURE GET_ALLSALES;
+GO
+
+CREATE PROCEDURE GET_ALLSALES
+@POUTCUR CURSOR VARYING OUTPUT
+AS
+BEGIN
+
+   SET @POUTCUR = CURSOR
+   FOR SELECT * FROM SALE;
+
+   OPEN @POUTCUR;
+
+END
+GO
+
+-- Exec Q17:
+DECLARE 
+    @POUTCUR CURSOR
+
+DECLARE
+    @database_id INT, 
+    @database_name  VARCHAR(255);
+
+EXEC GET_ALLSALES @POUTCUR = @POUTCUR OUTPUT
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+   PRINT @database_name + ' id:' + CAST(@database_id AS VARCHAR(10));
+
+   FETCH NEXT FROM @POUTCUR INTO 
+      @database_id, 
+      @database_name;
+END;
+
+CLOSE @POUTCUR;
+
+DEALLOCATE @POUTCUR;
+GO
+
+/* Note: Q17 went well but I dont know why it
+ didnt display the complex sale details */
+
+-- Test Statements for Q17:
+
+-- SELECT * FROM LOCATION
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- SELECT * FROM SALE
+-- DROP GET_ALLSALES
+-- DROP TABLE LOCATION
+
+-----------------------------------------------------------------------
+
+-- Q18:
+
+GO
+IF OBJECT_ID('COUNT_PRODUCT_SALES') IS NOT NULL
+DROP PROCEDURE COUNT_PRODUCT_SALES;
+GO
+
+CREATE PROCEDURE COUNT_PRODUCT_SALES
+@pdays Int
+
+AS
+
+BEGIN
+  BEGIN TRY
+ 
+     DECLARE @ANSWER INT
+      SET @ANSWER = (SELECT SUM(QTY) Over (Order By SALEID) as Product_Sales_Summed_up  
+      FROM SALE) 
+      RETURN @ANSWER
+
+
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q18:
+  DECLARE @pdays_ INT
+  EXEC @pdays_ = COUNT_PRODUCT_SALES @pdays = 03
+  PRINT @pdays_
+-------------------------------------------------------------------
+
+-- Test Statements for Q18:
+
+-- SELECT * FROM LOCATION
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- SELECT * FROM SALE
+-- DROP COUNT_PRODUCT_SALES
+-- DROP TABLE LOCATION
+
+-----------------------------------------------------------------------
+
+
+-- Q19:
+
+GO
+IF OBJECT_ID('DELETE_SALE') IS NOT NULL
+DROP PROCEDURE DELETE_SALE;
+GO
+
+CREATE PROCEDURE DELETE_SALE
+-- No Parameters 
+
+AS
+
+BEGIN
+  BEGIN TRY
+
+      SELECT PRICE*QTY AS total_price
+      FROM SALE
+
+  -- Updating Customer table Sales YTD
+       EXEC UPD_CUST_SALESYTD @pcustid = 999, @pamt = 0 
+  -- Updating Product table Product YTD 
+       EXEC UPD_PROD_SALESYTD @pprodid = 999, @pamt = 0 
+
+  IF NOT EXISTS (SELECT 1 FROM SALE WHERE SALEID = 999)
+   THROW 50280, 'No Sale Rows Found', 1
+  ELSE DELETE FROM SALE WHERE SALEID = 999;
+        
+    (SELECT MIN(SALEID) FROM SALE WHERE SALEID = 999)
+
+    RETURN 999;
+
+  END TRY
+  BEGIN CATCH
+      BEGIN
+         DECLARE @ERRORMESSAGE NVARCHAR(MAX) = ERROR_MESSAGE();
+         THROW 50000, @ERRORMESSAGE, 1
+      END
+  END CATCH
+END
+
+-- Exec Q19:
+  DECLARE @SaleID_Value INT
+  EXEC DELETE_SALE
+  PRINT @SaleID_Value
+ 
+-------------------------------------------------------------------
+
+-- Test Statements for Q19:
+
+-- SELECT * FROM LOCATION
+-- SELECT * FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- SELECT * FROM SALE
+-- DROP DELETE_SALE
+-- DROP TABLE SALE
+
+-----------------------------------------------------------------------
+
+-- Q22:
+
+GO
+IF OBJECT_ID('DELETE_PRODUCT') IS NOT NULL
+DROP PROCEDURE DELETE_PRODUCT
+GO
+
+CREATE PROCEDURE DELETE_PRODUCT
+ @pProdid Int
+
+AS
+
+BEGIN
+  BEGIN TRY
+        
+      
+
+       -- Exception
+       IF @pprodid <> 999
+         THROW 50320, 'Product cannot be deleted as sales exist', 1 
+       -------------------------------------
+
+       -- Exception
+       IF @pprodid <> 999
+         THROW 50320, 'Product ID not found', 1  
+       -------------------------------------
+
+        DELETE FROM PRODUCT;
 
       
   END TRY
@@ -513,19 +1141,18 @@ BEGIN
   END CATCH
 END
 
-----------------------------------------------------------------
-
--- Exec Q10:
-
-EXEC ADD_SIMPLE_SALE 
-
-
+-- Exec Q19:
+  EXEC DELETE_PRODUCT @pProdid = 999
+  
 -------------------------------------------------------------------
 
--- Test Statements for Q10:
+-- Test Statements for Q19:
 
+-- SELECT * FROM LOCATION
 -- SELECT * FROM CUSTOMER
--- DROP PROCEDURE ADD_SIMPLE_SALE
--- DELETE FROM CUSTOMER
+-- SELECT * FROM PRODUCT
+-- SELECT * FROM SALE
+-- DROP DELETE_SALE
+-- DROP TABLE SALE
 
 -----------------------------------------------------------------------

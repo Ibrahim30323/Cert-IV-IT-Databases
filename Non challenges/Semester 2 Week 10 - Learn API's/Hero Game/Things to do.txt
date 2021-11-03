@@ -1,0 +1,3 @@
+Make Erd and Data dictionary ready to support game.
+Write ddl and dml setup the database and deploy to aws server.
+Make API to connect to website.

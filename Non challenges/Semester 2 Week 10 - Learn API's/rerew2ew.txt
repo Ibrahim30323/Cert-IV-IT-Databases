@@ -1,0 +1,49 @@
+Learning Web API:
+
+-A Web API is a type of API used in software development which deals with HTTP services by communicating and sending data forward and back with the clients web browser on any internet platform.  
+-
+
+Facts about Web API:
+
+-Web API can only be built or constructed by code
+-A Web API only supports the HTTP protocol 
+-A Web API supports the following response/request data formats: JSON, XML, BSON
+
+-Web API 1 is supported by the .NET framework '.NET 4.0'
+-Web API 2 is supported by the .NET framework '.NET 4.5'
+
+-JSON serialization is used from an open-source library called 'Json.NET'
+-A Web API controller must be derived from the 'ApiController Class'
+-The types of routing supported for Web API is 'Convention-based Routing' and 'Attribute Routing'.
+-Built-in Web API action method response types are 'IHttpActionResult', 'HttpResponseMessage' and user made action methods are applicable
+
+
+-The formatter class for JSON is 'JsonMediaTypeFormatter'
+-To send HTTP requests in .NET 4.5, you must use the class 'HttpClient'
+-Property that returns all the formatters: 'GlobalConfiguration.Configuration.Formatters'.
+
+-Web API filters are used to add an extra layer of logic before or after executing the action method.
+  
+-A Web API can extract the values of primitive type parameters of an action method with using a 'Query string' by default.
+-Web API can extract the values of complex type parameters of an action method while using the 'HTTP Request Body' by default.
+
+-Web API will result in the status code '200' based on successful execution
+-If a Web API sends a HTTP response but results in an uncaught exception, an error status code will display '500 - Internal Server Error'.  
+
+
+-To check the validity of the model in a Web API Use 'ModelState.IsValid'.
+
+-Web API can be self-hosted, like in IIS 
+-Web API can be hosted in any web server that supports the .NET Framework
+
+
+
+
+
+
+
+
+
+
+
+
